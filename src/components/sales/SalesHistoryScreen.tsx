@@ -481,7 +481,14 @@ export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = ({
             >
               <div>
                 <h3 className="font-bold text-lg">Transaction Details</h3>
-                <p className="text-xs text-amber-200 font-mono">ID: {selectedSale.receiptNumber}</p>
+                <div className="flex items-center space-x-2">
+                  <p className="text-xs text-amber-200 font-mono">ID: {selectedSale.receiptNumber}</p>
+                  {selectedSale.isBacklog && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                      Back-log
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => setSelectedSale(null)}

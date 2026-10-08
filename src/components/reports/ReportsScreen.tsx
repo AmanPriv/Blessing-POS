@@ -1499,9 +1499,16 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({
             >
               <div>
                 <h3 className="text-base font-black tracking-tight">{SHOP_NAME} - Receipt</h3>
-                <p className="text-xs text-amber-200 font-mono">
-                  Receipt #{selectedSaleForModal.receiptNumber}
-                </p>
+                <div className="flex items-center space-x-2">
+                  <p className="text-xs text-amber-200 font-mono">
+                    Receipt #{selectedSaleForModal.receiptNumber}
+                  </p>
+                  {selectedSaleForModal.isBacklog && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                      Back-log
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
