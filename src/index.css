@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --color-maroon: #6B1E2B;
+  --color-maroon-hover: #551722;
+  --color-maroon-light: #842535;
+  --color-maroon-subtle: #F7EBED;
+  --color-cream: #FFF8E7;
+  --color-cream-surface: #FFFDF8;
+  --color-cream-alt: #F7EED8;
+  --color-text-dark: #2B2523;
+  --color-text-muted: #6E6460;
+  --color-border-light: #E6DCCB;
+}
+
+body {
+  background-color: #FFF8E7;
+  color: #2B2523;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+@layer utilities {
+  .bg-cream {
+    background-color: #FFF8E7;
+  }
+  .bg-cream-surface {
+    background-color: #FFFDF8;
+  }
+  .bg-cream-alt {
+    background-color: #F7EED8;
+  }
+  .bg-maroon {
+    background-color: #6B1E2B;
+  }
+  .bg-maroon-hover:hover {
+    background-color: #551722;
+  }
+  .bg-maroon-subtle {
+    background-color: #F7EBED;
+  }
+  .text-maroon {
+    color: #6B1E2B;
+  }
+  .text-dark {
+    color: #2B2523;
+  }
+  .text-muted {
+    color: #6E6460;
+  }
+  .border-cream {
+    border-color: #E6DCCB;
+  }
+  .border-maroon {
+    border-color: #6B1E2B;
+  }
+}
+

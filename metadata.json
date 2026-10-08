@@ -1,0 +1,6 @@
+{
+  "name": "FastTrack POS & Inventory",
+  "description": "Fast, mobile-friendly Point of Sale and Inventory Management System with lightning-fast Product Code entry and Excel catalog import.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
