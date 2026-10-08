@@ -58,7 +58,9 @@ export interface Sale {
   paymentNote?: string;
   cashierName: string;
   cashierId: string;
-  createdAt: string;
+  createdAt: string; // ISO date string
+  ethiopianDate?: string; // Formatted Ethiopian date e.g. "Meskerem 28, 2019 E.C."
+  isBacklog?: boolean; // Flag indicating if recorded as back-log transaction
 }
 
 export interface StockMovement {
@@ -90,6 +92,8 @@ export interface AppSettings {
   currencySymbol: string;
   defaultMinStockThreshold: number;
   taxRate?: number;
+  calendarPreference?: 'ethiopian' | 'gregorian' | 'both'; // Default to Ethiopian
+  enableBacklogSales?: boolean; // Allow recording past sales
 }
 
 export type StockStatus = 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';

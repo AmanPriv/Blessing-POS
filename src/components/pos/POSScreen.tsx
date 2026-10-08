@@ -19,6 +19,8 @@ import {
 import { Product, CartItem, PaymentMethod, AppSettings, User, Sale } from '../../types';
 import { storage } from '../../services/storage';
 import { sounds } from '../../utils/audio';
+import { EthiopianDate, getCurrentEthiopianDate, ethToDate, formatEthiopianDate } from '../../utils/ethiopianCalendar';
+import { EthiopianDateInput } from '../common/EthiopianDateInput';
 
 interface POSScreenProps {
   settings: AppSettings;
@@ -46,6 +48,14 @@ export const POSScreen: React.FC<POSScreenProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [amountReceived, setAmountReceived] = useState<string>('');
   const [paymentNote, setPaymentNote] = useState<string>('');
+
+  // Ethiopian Calendar & Back-log state for recording sales
+  const [ethSaleDate, setEthSaleDate] = useState<EthiopianDate>(getCurrentEthiopianDate());
+  const [saleTime, setSaleTime] = useState<string>(() => {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
+  const [isBacklogSale, setIsBacklogSale] = useState<boolean>(false);
 
   // Sale completed notification modal state
   const [completedSale, setCompletedSale] = useState<Sale | null>(null);
@@ -304,6 +314,21 @@ export const POSScreen: React.FC<POSScreenProps> = ({
       subtotal: item.subtotal,
     }));
 
+    // Resolve date of sale: if backlog is enabled, compute from chosen Ethiopian date + time
+    let saleTimestamp: string;
+    let formattedEthDate: string;
+
+    if (isBacklogSale) {
+      const [hh, mm] = (saleTime || '12:00').split(':').map((v) => parseInt(v, 10) || 0);
+      const computedDate = ethToDate(ethSaleDate.year, ethSaleDate.month, ethSaleDate.day, hh, mm, 0);
+      saleTimestamp = computedDate.toISOString();
+      formattedEthDate = formatEthiopianDate(computedDate, { includeTime: true });
+    } else {
+      const now = new Date();
+      saleTimestamp = now.toISOString();
+      formattedEthDate = formatEthiopianDate(now, { includeTime: true });
+    }
+
     const result = storage.completeSale({
       items: saleItems,
       subtotal: rawSubtotal,
@@ -315,6 +340,9 @@ export const POSScreen: React.FC<POSScreenProps> = ({
       paymentNote: paymentNote.trim() || undefined,
       cashierName: currentUser.name,
       cashierId: currentUser.id,
+      createdAt: saleTimestamp,
+      ethiopianDate: formattedEthDate,
+      isBacklog: isBacklogSale,
     });
 
     if (!result.success || !result.sale) {
@@ -1095,6 +1123,18 @@ export const POSScreen: React.FC<POSScreenProps> = ({
                 </div>
               )}
 
+              {/* Ethiopian Calendar Date & Backlog Selector */}
+              <div>
+                <EthiopianDateInput
+                  ethDate={ethSaleDate}
+                  timeStr={saleTime}
+                  isBacklog={isBacklogSale}
+                  onEthDateChange={(newEth) => setEthSaleDate(newEth)}
+                  onTimeChange={(newTime) => setSaleTime(newTime)}
+                  onToggleBacklog={(enabled) => setIsBacklogSale(enabled)}
+                />
+              </div>
+
               {/* Optional Reference or Note */}
               <div>
                 <label
@@ -1185,8 +1225,21 @@ export const POSScreen: React.FC<POSScreenProps> = ({
             >
               <div className="flex justify-between items-center">
                 <span style={{ color: '#6E6460' }}>Transaction ID:</span>
-                <span className="font-mono font-bold" style={{ color: '#2B2523' }}>
-                  {completedSale.receiptNumber}
+                <div className="flex items-center space-x-1.5">
+                  <span className="font-mono font-bold" style={{ color: '#2B2523' }}>
+                    {completedSale.receiptNumber}
+                  </span>
+                  {completedSale.isBacklog && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                      Back-log
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span style={{ color: '#6E6460' }}>Ethiopian Date:</span>
+                <span className="font-bold text-amber-900">
+                  {completedSale.ethiopianDate || formatEthiopianDate(completedSale.createdAt, { includeTime: true })}
                 </span>
               </div>
               <div className="flex justify-between items-center">

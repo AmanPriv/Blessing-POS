@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, ShoppingCart, LogOut, Shield, UserCheck } from 'lucide-react';
+import { Menu, ShoppingCart, LogOut, Shield, UserCheck, Calendar } from 'lucide-react';
 import { AppSettings, User as UserType, SHOP_NAME } from '../../types';
+import { formatEthiopianDate } from '../../utils/ethiopianCalendar';
 
 interface NavbarProps {
   currentTab: string;
@@ -93,6 +94,20 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       <div className="flex items-center space-x-2 sm:space-x-3">
+        {/* Ethiopian Calendar Badge */}
+        <div
+          className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border shadow-xs"
+          style={{
+            backgroundColor: '#FFF8E7',
+            borderColor: '#E6DCCB',
+            color: '#6B1E2B',
+          }}
+          title="Current Ethiopian Calendar Date (ዓ.ም)"
+        >
+          <Calendar className="w-3.5 h-3.5 text-amber-700" />
+          <span>{formatEthiopianDate(new Date())}</span>
+        </div>
+
         {/* Clock & Currency */}
         <div
           className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-xl text-xs font-semibold border"

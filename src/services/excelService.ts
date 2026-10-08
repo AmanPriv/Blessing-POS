@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import { Product, Sale } from '../types';
+import { formatEthiopianDate } from '../utils/ethiopianCalendar';
 
 export interface ColumnMapping {
   name: string;
@@ -241,7 +242,9 @@ export function exportProductsToExcel(products: Product[]): void {
 export function exportSalesToExcel(sales: Sale[]): void {
   const exportData = sales.map((s) => ({
     'Transaction ID': s.receiptNumber,
-    'Date & Time': new Date(s.createdAt).toLocaleString(),
+    'Ethiopian Date (E.C.)': s.ethiopianDate || formatEthiopianDate(s.createdAt, { includeTime: true }),
+    'Back-log Sale': s.isBacklog ? 'YES' : 'NO',
+    'Date & Time (G.C.)': new Date(s.createdAt).toLocaleString(),
     'Items Count': s.items.reduce((acc, i) => acc + i.quantity, 0),
     'Subtotal': s.subtotal,
     'Discount': s.discount,

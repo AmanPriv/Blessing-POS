@@ -10,6 +10,8 @@ import {
   Trash2,
   RotateCcw,
   AlertTriangle,
+  Calendar,
+  History,
 } from 'lucide-react';
 import { AppSettings, User, SHOP_NAME } from '../../types';
 import { storage } from '../../services/storage';
@@ -318,6 +320,72 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             />
             <p className="text-[11px] mt-1" style={{ color: '#6E6460' }}>
               Products at or below this value show a LOW STOCK alert.
+            </p>
+          </div>
+
+          {/* Ethiopian Calendar System */}
+          <div>
+            <label
+              className="block text-xs font-bold uppercase tracking-wider mb-1.5 flex items-center space-x-1.5"
+              style={{ color: '#2B2523' }}
+            >
+              <Calendar className="w-4 h-4" style={{ color: '#6B1E2B' }} />
+              <span>Calendar System (የቀን መቁጠሪያ)</span>
+            </label>
+            <select
+              value={formData.calendarPreference || 'ethiopian'}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  calendarPreference: e.target.value as any,
+                })
+              }
+              className="w-full px-4 py-2.5 border rounded-xl font-bold outline-none text-sm cursor-pointer"
+              style={{
+                backgroundColor: '#FFF8E7',
+                borderColor: '#E6DCCB',
+                color: '#2B2523',
+              }}
+            >
+              <option value="ethiopian">Ethiopian Calendar (የኢትዮጵያ ዘመን አቆጣጠር - E.C.)</option>
+              <option value="both">Both (Ethiopian Primary with Gregorian Reference)</option>
+              <option value="gregorian">Gregorian Calendar (G.C.)</option>
+            </select>
+            <p className="text-[11px] mt-1 text-[#6E6460]">
+              Standard Ethiopian business calendar (13 months, Meskerem to Pagume).
+            </p>
+          </div>
+
+          {/* Enable Back-Log Sales */}
+          <div>
+            <label
+              className="block text-xs font-bold uppercase tracking-wider mb-1.5 flex items-center space-x-1.5"
+              style={{ color: '#2B2523' }}
+            >
+              <History className="w-4 h-4" style={{ color: '#6B1E2B' }} />
+              <span>Back-Log Sales Recording</span>
+            </label>
+            <div className="flex items-center space-x-3 mt-1.5">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.enableBacklogSales !== false}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      enableBacklogSales: e.target.checked,
+                    })
+                  }
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-neutral-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6B1E2B]"></div>
+                <span className="ml-3 text-xs font-bold" style={{ color: '#2B2523' }}>
+                  {formData.enableBacklogSales !== false ? 'Enabled (Active)' : 'Disabled'}
+                </span>
+              </label>
+            </div>
+            <p className="text-[11px] mt-1 text-[#6E6460]">
+              Allows cashiers to backdate sales in Ethiopian calendar for past orders.
             </p>
           </div>
         </div>

@@ -22,6 +22,15 @@ import {
 } from 'lucide-react';
 import { Product, Sale, AppSettings, SHOP_NAME } from '../../types';
 import * as XLSX from 'xlsx';
+import {
+  ETHIOPIAN_MONTHS,
+  EthiopianDate,
+  getCurrentEthiopianDate,
+  formatEthiopianDate,
+  formatEthiopianShort,
+  ethToDate,
+  toEthiopianDate,
+} from '../../utils/ethiopianCalendar';
 
 interface ReportsScreenProps {
   products: Product[];
@@ -342,7 +351,9 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({
     // Sheet 2: Transactions
     const transactionsSheetData = filteredSalesForReport.map((s) => ({
       'Receipt #': s.receiptNumber,
-      'Date & Time': new Date(s.createdAt).toLocaleString(),
+      'Ethiopian Date (E.C.)': s.ethiopianDate || formatEthiopianDate(s.createdAt, { includeTime: true }),
+      'Back-log Sale': s.isBacklog ? 'YES' : 'NO',
+      'Gregorian Date': new Date(s.createdAt).toLocaleString(),
       'Cashier': s.cashierName,
       'Payment Method': s.paymentMethod.toUpperCase(),
       'Items Count': s.items.reduce((acc, item) => acc + item.quantity, 0),
@@ -940,13 +951,22 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({
                         style={{ color: '#2B2523' }}
                       >
                         <td className="py-3 px-4 font-mono font-bold" style={{ color: '#6B1E2B' }}>
-                          {sale.receiptNumber}
+                          <div className="flex flex-col items-start gap-0.5">
+                            <span>{sale.receiptNumber}</span>
+                            {sale.isBacklog && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                                Back-log
+                              </span>
+                            )}
+                          </div>
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap" style={{ color: '#6E6460' }}>
-                          {new Date(sale.createdAt).toLocaleString(undefined, {
-                            dateStyle: 'medium',
-                            timeStyle: 'short',
-                          })}
+                        <td className="py-3 px-4 whitespace-nowrap" style={{ color: '#2B2523' }}>
+                          <div className="font-bold text-amber-950">
+                            {sale.ethiopianDate || formatEthiopianDate(sale.createdAt)}
+                          </div>
+                          <div className="text-[10px] text-neutral-500">
+                            G.C.: {new Date(sale.createdAt).toLocaleDateString()}
+                          </div>
                         </td>
                         <td className="py-3 px-4">{sale.cashierName}</td>
                         <td className="py-3 px-4">
@@ -1150,6 +1170,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({
                       }}
                     >
                       <th className="py-3 px-4">Date</th>
+                      <th className="py-3 px-4">Ethiopian Date (ዓ.ም)</th>
                       <th className="py-3 px-4">Day</th>
                       <th className="py-3 px-4 text-center">Orders</th>
                       <th className="py-3 px-4 text-center">Units Sold</th>
@@ -1168,6 +1189,9 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({
                       >
                         <td className="py-3 px-4 font-mono font-bold" style={{ color: '#6B1E2B' }}>
                           {row.date}
+                        </td>
+                        <td className="py-3 px-4 text-xs font-bold text-amber-950">
+                          {formatEthiopianDate(row.date)}
                         </td>
                         <td className="py-3 px-4 text-neutral-600 font-semibold">{row.dayName}</td>
                         <td className="py-3 px-4 text-center font-mono font-bold">{row.count}</td>
@@ -1497,9 +1521,12 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({
                 }}
               >
                 <div>
-                  <span style={{ color: '#6E6460' }}>Date &amp; Time:</span>
-                  <div className="font-bold" style={{ color: '#2B2523' }}>
-                    {new Date(selectedSaleForModal.createdAt).toLocaleString()}
+                  <span style={{ color: '#6E6460' }}>Ethiopian Date (ዓ.ም):</span>
+                  <div className="font-bold text-amber-900">
+                    {selectedSaleForModal.ethiopianDate || formatEthiopianDate(selectedSaleForModal.createdAt, { includeTime: true })}
+                  </div>
+                  <div className="text-[10px] text-neutral-500">
+                    G.C.: {new Date(selectedSaleForModal.createdAt).toLocaleString()}
                   </div>
                 </div>
                 <div>

@@ -1,4 +1,5 @@
 import { Product, Sale, StockMovement, Category, AppSettings, User, SHOP_NAME } from '../types';
+import { formatEthiopianDate, toEthiopianDate } from '../utils/ethiopianCalendar';
 
 const STORAGE_KEYS = {
   PRODUCTS: 'pos_fasttrack_products',
@@ -19,6 +20,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   currency: 'ETB',
   currencySymbol: 'ETB',
   defaultMinStockThreshold: 5,
+  calendarPreference: 'ethiopian',
+  enableBacklogSales: true,
 };
 
 export const DEFAULT_USERS: User[] = [
@@ -446,9 +449,10 @@ class StorageService {
   }
 
   // --- SALES & CHECKOUT ---
-  public completeSale(saleData: Omit<Sale, 'id' | 'receiptNumber' | 'createdAt'>): { success: boolean; message?: string; sale?: Sale } {
+  public completeSale(saleData: Omit<Sale, 'id' | 'receiptNumber'> & { createdAt?: string; ethiopianDate?: string; isBacklog?: boolean }): { success: boolean; message?: string; sale?: Sale } {
     const products = this.getProducts();
-    const now = new Date();
+    const saleDate = saleData.createdAt ? new Date(saleData.createdAt) : new Date();
+    const isBacklog = Boolean(saleData.isBacklog);
 
     // Verify stock availability for ALL items first
     for (const item of saleData.items) {
@@ -464,19 +468,31 @@ class StorageService {
       }
     }
 
-    // Generate unique transaction reference e.g. TXN-20261007-0001
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
+    // Generate unique transaction reference based on Ethiopian date or sale date
+    // e.g. TXN-20190128-0001 (Ethiopian) or TXN-20261008-0001
+    const eth = toEthiopianDate(saleDate);
+    const ethYyyy = eth.year;
+    const ethMm = String(eth.month).padStart(2, '0');
+    const ethDd = String(eth.day).padStart(2, '0');
+
+    const yyyy = saleDate.getFullYear();
+    const mm = String(saleDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(saleDate.getDate()).padStart(2, '0');
+
     const existingSales = this.getSales();
-    const todaySalesCount = existingSales.filter((s) => s.createdAt.startsWith(`${yyyy}-${mm}-${dd}`)).length;
-    const receiptNumber = `TXN-${yyyy}${mm}${dd}-${String(todaySalesCount + 1).padStart(4, '0')}`;
+    const sameDateSalesCount = existingSales.filter((s) => s.createdAt.startsWith(`${yyyy}-${mm}-${dd}`)).length;
+    const prefix = isBacklog ? 'BL-TXN' : 'TXN';
+    const receiptNumber = `${prefix}-${ethYyyy}${ethMm}${ethDd}-${String(sameDateSalesCount + 1).padStart(4, '0')}`;
+
+    const formattedEthDate = saleData.ethiopianDate || formatEthiopianDate(saleDate, { includeTime: true });
 
     const newSale: Sale = {
       ...saleData,
       id: 'sale-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
       receiptNumber,
-      createdAt: now.toISOString(),
+      createdAt: saleDate.toISOString(),
+      ethiopianDate: formattedEthDate,
+      isBacklog,
     };
 
     // Deduct stock and record movements
@@ -488,7 +504,7 @@ class StorageService {
         products[index] = {
           ...products[index],
           stockQuantity: newStock,
-          updatedAt: now.toISOString(),
+          updatedAt: new Date().toISOString(),
         };
 
         this.addStockMovement({
@@ -500,15 +516,19 @@ class StorageService {
           quantityChanged: -item.quantity,
           newQuantity: newStock,
           referenceId: receiptNumber,
-          note: `Sale transaction #${receiptNumber}`,
-          createdAt: now.toISOString(),
+          note: isBacklog
+            ? `Back-log sale recorded for ${formattedEthDate} (#${receiptNumber})`
+            : `Sale transaction #${receiptNumber} (${formattedEthDate})`,
+          createdAt: saleDate.toISOString(),
         });
       }
     }
 
-    // Save updated products and new sale
+    // Save updated products and new sale (sorted with newest sales first)
     this.set(STORAGE_KEYS.PRODUCTS, products);
-    existingSales.unshift(newSale); // latest first
+    existingSales.unshift(newSale); // add to list
+    // Keep chronologically sorted (newest date first)
+    existingSales.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     this.set(STORAGE_KEYS.SALES, existingSales);
 
     return { success: true, sale: newSale };
@@ -609,7 +629,13 @@ class StorageService {
   // --- SETTINGS ---
   public getSettings(): AppSettings {
     const s = this.get<AppSettings>(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
-    return { ...s, shopName: SHOP_NAME };
+    return {
+      ...DEFAULT_SETTINGS,
+      ...s,
+      shopName: SHOP_NAME,
+      calendarPreference: s.calendarPreference || 'ethiopian',
+      enableBacklogSales: s.enableBacklogSales !== undefined ? s.enableBacklogSales : true,
+    };
   }
 
   public updateSettings(settings: Partial<AppSettings>, operatorRole?: string): AppSettings {

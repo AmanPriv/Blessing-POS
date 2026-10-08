@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Sale, AppSettings, User } from '../../types';
 import { exportSalesToExcel } from '../../services/excelService';
+import { formatEthiopianDate, formatEthiopianShort } from '../../utils/ethiopianCalendar';
 
 interface SalesHistoryScreenProps {
   sales: Sale[];
@@ -378,21 +379,30 @@ export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = ({
                     className="hover:bg-[#FFF8E7]/50 transition-colors"
                   >
                     <td className="py-3 px-4">
-                      <span
-                        className="font-mono font-bold text-xs px-2 py-0.5 rounded border"
-                        style={{
-                          backgroundColor: '#FFF8E7',
-                          borderColor: '#E6DCCB',
-                          color: '#6B1E2B',
-                        }}
-                      >
-                        {sale.receiptNumber}
-                      </span>
+                      <div className="flex flex-col items-start gap-1">
+                        <span
+                          className="font-mono font-bold text-xs px-2 py-0.5 rounded border"
+                          style={{
+                            backgroundColor: '#FFF8E7',
+                            borderColor: '#E6DCCB',
+                            color: '#6B1E2B',
+                          }}
+                        >
+                          {sale.receiptNumber}
+                        </span>
+                        {sale.isBacklog && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                            Back-log
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-xs" style={{ color: '#2B2523' }}>
-                      <div className="font-semibold">{sDate.toLocaleDateString()}</div>
-                      <div style={{ color: '#6E6460' }}>
-                        {sDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      <div className="font-bold text-amber-950">
+                        {sale.ethiopianDate || formatEthiopianDate(sale.createdAt)}
+                      </div>
+                      <div className="text-[11px]" style={{ color: '#6E6460' }}>
+                        {sDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • G.C.: {sDate.toLocaleDateString()}
                       </div>
                     </td>
                     <td className="py-3 px-4 text-xs font-bold" style={{ color: '#2B2523' }}>
@@ -490,9 +500,12 @@ export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = ({
                 }}
               >
                 <div>
-                  <span style={{ color: '#6E6460' }}>Date &amp; Time:</span>
-                  <div className="font-bold" style={{ color: '#2B2523' }}>
-                    {new Date(selectedSale.createdAt).toLocaleString()}
+                  <span style={{ color: '#6E6460' }}>Ethiopian Date (ዓ.ም):</span>
+                  <div className="font-bold text-amber-900">
+                    {selectedSale.ethiopianDate || formatEthiopianDate(selectedSale.createdAt, { includeTime: true })}
+                  </div>
+                  <div className="text-[10px] text-neutral-500">
+                    G.C.: {new Date(selectedSale.createdAt).toLocaleString()}
                   </div>
                 </div>
                 <div>
